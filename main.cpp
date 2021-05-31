@@ -79,12 +79,11 @@ void BuildRules() {
             if (s == "OR")
                 test1.emplace_back("1");
         }
-        a.NumOfSides = n;
-        a.words.resize(NumOfRules);
-        for (int k = 0, h = 0; k < test1.size() && h < test1.size() / 2; k += 2, h++) {
-            a.words[h].first = test1[k];
-            a.words[h].second = test1[k + 1];
+     
+        for (int k = 0; k < test1.size() ; k += 2) {
+        a.words.emplace_back(test1[k],test1[k+1]);
         }
+        a.n=a.wors.size();
         Rules::modify(a);
     }
 }
