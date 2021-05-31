@@ -1,37 +1,23 @@
 #include <bits/stdc++.h>
+#include "DeFuzz.cpp"
+#include "point.cpp"
+#include "Fuzz.cpp"
+#include "Rules.cpp"
+#include "output.cpp"
 
 using namespace std;
-int NumOfVar;
-struct point {
-    string name, kind;
-    int n;
-    vector<int> cord;
-};
-vector<int> info;
-
-vector<vector<point>> Shapes;
+int NumOfVar, outputN;
 vector<point> Output;
-string OutputName;
+vector<pair<string, long double>> inferOutput;
+map<string, long double> result;
+string Outputname;
 
-void Fuzz();
-
-void DeFuzz();
-
-void Enference();
-
-bool PointInShape(point p, int x); // return true incase of Intersection
-long double Intersect(point p, int x); // get the intersection between shape(line) and point then return y
-long double Centroid(vector<point> v);
-
-
-int main() {
+void BuildInput() {
     cin >> NumOfVar;
-    Shapes.resize(NumOfVar);
     for (int i = 0; i < NumOfVar; ++i) {
         string VarName;
-        int VarNum;
+        long double VarNum;
         cin >> VarName >> VarNum;
-        info.push_back(VarNum);
         int SetNum;
         cin >> SetNum;
         for (int j = 0; j < SetNum; ++j) {
@@ -41,28 +27,95 @@ int main() {
                 p.n = 3;
             else p.n = 4;
             for (int k = 0; k < p.n; ++k) {
-                int x;
+                long double x;
                 cin >> x;
                 p.cord.push_back(x);
             }
-            Shapes[i].push_back(p);
+
+            Fuzz::membership(VarNum, p);
         }
     }
-    cin >> OutputName;
-    int n;
-    cin >> n;
-    for (int j = 0; j < n; ++j) {
+
+}
+
+void BuildOutput() {
+
+    cin >> Outputname;
+
+    cin >> outputN;
+    for (int i = 0; i < outputN; ++i) {
         point p;
         cin >> p.name >> p.kind;
         if (p.kind == "triangle")
             p.n = 3;
         else p.n = 4;
         for (int k = 0; k < p.n; ++k) {
-            int x;
+            long double x;
             cin >> x;
             p.cord.push_back(x);
         }
         Output.push_back(p);
+
     }
-// inference to do ...
+}
+
+void BuildRules() {
+    int NumOfRules;
+    cin >> NumOfRules;
+    for (int i = 0; i < NumOfRules; i++) {
+        output a;
+        string line;
+        int n;
+        cin >> n;
+        getline(cin, line);
+        istringstream iss(line);
+        vector<string> test1;
+        for (string s; iss >> s;) {
+            if (s == "=" || s == "then")
+                continue;
+            test1.push_back(s);
+            if (s == "AND")
+                test1.emplace_back("0");
+            if (s == "OR")
+                test1.emplace_back("1");
+        }
+        a.NumOfSides = n;
+        a.words.resize(NumOfRules);
+        for (int k = 0, h = 0; k < test1.size() && h < test1.size() / 2; k += 2, h++) {
+            a.words[h].first = test1[k];
+            a.words[h].second = test1[k + 1];
+        }
+        Rules::modify(a);
+    }
+}
+
+int main() {
+    freopen("input", "rt", stdin);
+    freopen("output", "wt", stdout);
+
+    BuildInput();
+
+    BuildOutput();
+
+    BuildRules();
+
+    cout << "MemberSets for all variables" << endl;
+    for (auto &i:result)
+        cout << i.first << " " << i.second << endl;
+    cout << endl;
+
+    cout << "The final output from the Rules" << endl;
+    for (auto &i:inferOutput)
+        cout << i.first << " " << i.second << endl;
+    cout << endl;
+
+    DeFuzz deFuzz; //init all centeriod points for all the output shapes
+
+    cout << "Centriod point for all the shapes of output" << endl;
+    for (auto &i:deFuzz.centroidMap)
+        cout << i.first << " " << i.second << endl;
+    cout << endl;
+
+    cout << Outputname << " = " << deFuzz.CalcOuptput();
+
 }
