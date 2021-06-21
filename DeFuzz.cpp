@@ -41,7 +41,7 @@ long double DeFuzz::CalcOuptput() {
     long double Dom = 0, Num = 0;
     for (auto &out:inferOutput) {
         Num += out.second * this->centroidMap[out.first];
-        Dom += this->centroidMap[out.first];
+        Dom += out.second;
     }
     return Num / Dom;
 }
